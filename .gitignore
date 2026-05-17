@@ -1,0 +1,11 @@
+.mill-download/
+.bsp/
+build/
+out/
+generated/
+tools/src/
+tools/riscv/
+tools/spike/
+*.log
+*.vcd
+*.fst

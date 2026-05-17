@@ -1,0 +1,61 @@
+package build
+
+import mill.*
+import mill.scalalib.*
+import mill.scalalib.scalafmt.*
+
+object `package` extends SbtModule with ScalafmtModule {
+  def scalaVersion = "2.13.16"
+
+  def mvnDeps = Seq(
+    mvn"org.chipsalliance::chisel:7.11.0"
+  )
+
+  def scalacOptions = Seq(
+    "-deprecation",
+    "-feature",
+    "-unchecked",
+    "-language:reflectiveCalls"
+  )
+
+  def scalacPluginMvnDeps = Seq(
+    mvn"org.chipsalliance:::chisel-plugin:7.11.0"
+  )
+
+  def mainClass = Some("nova.v1.EmitNovaV1")
+
+  object test extends SbtTests with TestModule.ScalaTest {
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      mvn"org.scalatest::scalatest:3.2.20"
+    )
+  }
+
+  def emitVerilog() = Task.Command {
+    val cp = runClasspath().map(_.path).mkString(java.io.File.pathSeparator)
+    os.call(("java", "-cp", cp, "nova.v1.EmitNovaV1", "--target-dir", "generated"), cwd = moduleDir, stdout = os.Inherit)
+  }
+
+  def simulation() = Task.Command {
+    os.call(("bash", "scripts/run_sim.sh"), cwd = moduleDir, stdout = os.Inherit, env = Map("NOVA_MILL_OPTS" -> "--no-build-lock"))
+  }
+
+  def instructionTests() = Task.Command {
+    os.call(("bash", "scripts/run_isa_tests.sh"), cwd = moduleDir, stdout = os.Inherit, env = Map("NOVA_MILL_OPTS" -> "--no-build-lock"))
+  }
+
+  def spikeDifferential() = Task.Command {
+    os.call(("bash", "scripts/run_spike_diff.sh"), cwd = moduleDir, stdout = os.Inherit)
+  }
+
+  def freeRtos() = Task.Command {
+    os.call(("bash", "scripts/run_freertos_demo.sh"), cwd = moduleDir, stdout = os.Inherit)
+  }
+
+  def staticChecks() = Task.Command {
+    os.call(("bash", "scripts/static_checks.sh"), cwd = moduleDir, stdout = os.Inherit)
+  }
+
+  def regression() = Task.Command {
+    os.call(("bash", "scripts/run_regression.sh"), cwd = moduleDir, stdout = os.Inherit, env = Map("NOVA_MILL_OPTS" -> "--no-build-lock"))
+  }
+}

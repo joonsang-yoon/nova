@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+set -eu
+
+MILL_VERSION="1.1.5"
+MILL_DIR=".mill-download"
+MILL_BIN="${MILL_DIR}/mill-dist-${MILL_VERSION}.exe"
+MILL_URL="https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/${MILL_VERSION}/mill-dist-${MILL_VERSION}.exe"
+
+if [ ! -f "${MILL_BIN}" ]; then
+  mkdir -p "${MILL_DIR}"
+  curl -fsSL "${MILL_URL}" -o "${MILL_BIN}.tmp"
+  mv "${MILL_BIN}.tmp" "${MILL_BIN}"
+  chmod +x "${MILL_BIN}"
+fi
+
+exec "${MILL_BIN}" "$@"
